@@ -1,0 +1,18 @@
+{
+  "cSpell.words": [
+    "framestyle",
+    "hline",
+    "meshgrid",
+    "NSFD",
+    "seriestype",
+    "vline",
+    "xlims",
+    "xticks",
+    "ylims",
+    "yticks"
+  ],
+  "python.terminal.activateEnvInCurrentTerminal": false,
+  "python.terminal.activateEnvironment": false,
+  "julia.environmentPath": "${workspaceFolder}",
+  "julia.useRevise": true
+}

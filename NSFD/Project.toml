@@ -1,0 +1,7 @@
+name = "NSFD"
+uuid = "09ffc641-5453-42d0-a4b3-c4b7525e2ea1"
+authors = ["Marian Domanski <mmdski@gmail.com> and contributors"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1.6.7"
