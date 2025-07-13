@@ -8,7 +8,9 @@ struct Axis{Offset}
     Δ::Float64
 end
 
-Base.getindex(ax::Axis{O}, i::Int) where {O} = ax.Δ * (i - 1 + O)
+function Base.getindex(ax::Axis{O}, i::Int) where {O}
+    return ax.Δ * (i - 1 + O)
+end
 
 const CAxis = Axis{0.5}
 const RAxis = Axis{1.0}
@@ -41,12 +43,16 @@ function GridAxes(::Type{XAxis}, ::Type{YAxis},
     return GridAxes{XAxis,YAxis}(x_axis, y_axis)
 end
 
-Base.getindex(axes::GridAxes, i::Int, j::Int) = axes.x[i], axes.y[j]
+function Base.getindex(axes::GridAxes, i::Int, j::Int)
+    return axes.x[i], axes.y[j]
+end
 
 # AbstractGrid
 abstract type AbstractGrid end
 
-Base.getindex(grid::AbstractGrid, i::Int, j::Int) = grid.axes[i, j]
+function Base.getindex(grid::AbstractGrid, i::Int, j::Int)
+    return grid.axes[i, j]
+end
 
 # u-Grid
 # velocity component in x-direction
