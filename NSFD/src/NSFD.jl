@@ -7,7 +7,11 @@ module NSFD
 
 # Export
 export GridData, UGrid, VGrid, PGrid, meshgrid
+export UField, VField, PField, set!
+export InterpolatedVelocity
 
 include("grid.jl")
+include("staggered_fields.jl")
+include("interp_fields.jl")
 
 end # module

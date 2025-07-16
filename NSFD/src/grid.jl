@@ -15,6 +15,10 @@ end
 const CAxis = Axis{0.5}
 const RAxis = Axis{1.0}
 
+function offset(::Axis{O}) where {O}
+    return O
+end
+
 # GridData
 struct GridData
     x_length::Float64
@@ -52,6 +56,20 @@ abstract type AbstractGrid end
 
 function Base.getindex(grid::AbstractGrid, i::Int, j::Int)
     return grid.axes[i, j]
+end
+
+function Base.show(io::IO, grid::AbstractGrid)
+    nx, ny = grid.data.nx, grid.data.ny
+    x_off = offset(grid.axes.x)
+    y_off = offset(grid.axes.y)
+    Δx = grid.data.Δx
+    Δy = grid.data.Δy
+    return print(io,
+                 "$(typeof(grid))(size = ($nx, $ny), Δ = ($Δx, $Δy), offset = ($x_off, $y_off))")
+end
+
+function interior_indices(grid::AbstractGrid)
+    return 1:(grid.data.nx), 1:(grid.data.ny)
 end
 
 # u-Grid
