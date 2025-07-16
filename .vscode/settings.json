@@ -1,13 +1,22 @@
 {
   "cSpell.words": [
+    "colsize",
     "framestyle",
     "hline",
+    "hlines",
+    "interp",
+    "lengthscale",
+    "Makie",
+    "markersize",
     "meshgrid",
     "NSFD",
     "seriestype",
     "vline",
+    "vlines",
+    "xgridvisible",
     "xlims",
     "xticks",
+    "ygridvisible",
     "ylims",
     "yticks"
   ],
