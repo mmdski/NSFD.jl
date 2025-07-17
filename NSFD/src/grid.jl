@@ -68,6 +68,10 @@ function Base.show(io::IO, grid::AbstractGrid)
                  "$(typeof(grid))(size = ($nx, $ny), Δ = ($Δx, $Δy), offset = ($x_off, $y_off))")
 end
 
+function indices(grid::AbstractGrid)
+    return 0:(grid.data.nx + 1), 0:(grid.data.ny + 1)
+end
+
 function interior_indices(grid::AbstractGrid)
     return 1:(grid.data.nx), 1:(grid.data.ny)
 end
@@ -103,6 +107,19 @@ end
 
 function PGrid(data::GridData)
     return PGrid(data, GridAxes(CAxis, CAxis, data))
+end
+
+struct StaggeredGrid
+    u::UGrid
+    v::VGrid
+    p::PGrid
+end
+
+function StaggeredGrid(grid_data::GridData)
+    u = UGrid(grid_data)
+    v = VGrid(grid_data)
+    p = PGrid(grid_data)
+    return StaggeredGrid(u, v, p)
 end
 
 function meshgrid(grid::AbstractGrid)

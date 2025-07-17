@@ -10,8 +10,28 @@ function Base.getindex(field::AbstractStaggeredField, i::Int, j::Int)
     return field.values[i + 1, j + 1]
 end
 
+function Base.getindex(field::AbstractStaggeredField, I::UnitRange, J::UnitRange)
+    return field.values[I .+ 1, J .+ 1]
+end
+
 function Base.setindex!(field::AbstractStaggeredField, v::Real, i::Int, j::Int)
     return (field.values[i + 1, j + 1] = v)
+end
+
+function Base.size(field::AbstractStaggeredField)
+    return (field.grid.data.nx, field.grid.data.ny)
+end
+
+function Base.size(field::AbstractStaggeredField, d::Int)
+    return size(field)[d]
+end
+
+function Base.axes(field::AbstractStaggeredField)
+    return Base.OneTo.(size(field))
+end
+
+function Base.axes(field::AbstractStaggeredField, d::Int)
+    return Base.OneTo(size(field, d))
 end
 
 function Base.show(io::IO, field::AbstractStaggeredField)
@@ -20,15 +40,11 @@ function Base.show(io::IO, field::AbstractStaggeredField)
 end
 
 function set!(field::AbstractStaggeredField, v::Real)
-    I, J = interior_indices(field.grid)
-    for i in I, j in J
-        field[i, j] = v
-    end
-    return field
+    return fill!(field.values, v)
 end
 
 function set!(field::AbstractStaggeredField, f::Function)
-    I, J = interior_indices(field.grid)
+    I, J = indices(field.grid)
     for i in I, j in J
         field[i, j] = f(field.grid[i, j]...)
     end
@@ -39,43 +55,76 @@ struct UField <: AbstractStaggeredField
     grid::UGrid
     values::Matrix{Float64}
 
-    function UField(data::GridData, init::Float64)
-        grid = UGrid(data)
-        values = fill(init, data.nx + 2, data.ny + 2)
+    function UField(grid_data::GridData)
+        grid = UGrid(grid_data)
+        values = Matrix{Float64}(undef, grid.data.nx + 2, grid.data.ny + 2)
         return new(grid, values)
     end
 end
 
-function UField(data::GridData)
-    return UField(data, 0.0)
+function UField(grid_data::GridData, init::Float64)
+    u = UField(grid_data)
+    set!(u, init)
+    return u
 end
 
 struct VField <: AbstractStaggeredField
     grid::VGrid
     values::Matrix{Float64}
 
-    function VField(data::GridData, init::Float64)
-        grid = VGrid(data)
-        values = fill(init, data.nx + 2, data.ny + 2)
+    function VField(grid_data::GridData)
+        grid = VGrid(grid_data)
+        values = Matrix{Float64}(undef, grid.data.nx + 2, grid.data.ny + 2)
         return new(grid, values)
     end
 end
 
-function VField(data::GridData)
-    return VField(data, 0.0)
+function VField(grid_data::GridData, init::Float64)
+    v = VField(grid_data)
+    set!(v, init)
+    return v
 end
 
 struct PField <: AbstractStaggeredField
     grid::PGrid
     values::Matrix{Float64}
 
-    function PField(data::GridData, init::Float64)
-        grid = PGrid(data)
-        values = fill(init, data.nx + 2, data.ny + 2)
+    function PField(grid_data::GridData)
+        grid = PGrid(grid_data)
+        values = Matrix{Float64}(undef, grid.data.nx + 2, grid.data.ny + 2)
         return new(grid, values)
     end
 end
 
-function PField(data::GridData)
-    return PField(data, 0.0)
+function PField(grid_data::GridData, init::Float64)
+    p = PField(grid_data)
+    set!(p, init)
+    return p
+end
+
+struct StaggeredGridFields
+    grid_data::GridData
+    u::UField
+    v::VField
+    p::PField
+
+    function StaggeredGridFields(grid_data::GridData)
+        u = UField(grid_data)
+        v = VField(grid_data)
+        p = PField(grid_data)
+        return new(grid_data, u, v, p)
+    end
+end
+
+function StaggeredGridFields(grid_data::GridData, u_init::Float64, v_init::Float64,
+                             p_init::Float64)
+    fields = StaggeredGridFields(grid_data)
+    set!(fields.u, u_init)
+    set!(fields.v, v_init)
+    set!(fields.p, p_init)
+    return fields
+end
+
+function StaggeredGridFields(grid_data::GridData, init::Float64)
+    return StaggeredGridFields(grid_data, init, init, init)
 end

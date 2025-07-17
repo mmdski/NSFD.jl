@@ -6,12 +6,17 @@
 module NSFD
 
 # Export
-export GridData, UGrid, VGrid, PGrid, meshgrid
-export UField, VField, PField, set!
+export GridData, StaggeredGrid, meshgrid
+export StaggeredGridFields, set!
 export InterpolatedVelocity
 
 include("grid.jl")
 include("staggered_fields.jl")
 include("interp_fields.jl")
+
+include("Plotting.jl")
+
+using .Plotting: plot!
+export plot!
 
 end # module
