@@ -10,9 +10,21 @@ export GridData, StaggeredGrid, meshgrid
 export StaggeredGridFields, set!
 export InterpolatedVelocity
 
+# boundary conditions
+export apply!,
+# North
+       NOutflowBCond, NNoSlipBCond,
+# South
+       SOutflowBCond, SNoSlipBCond,
+# East
+       EOutflowBCond, ENoSlipBCond,
+# West
+       WOutflowBCond, WNoSlipBCond
+
 include("grid.jl")
 include("staggered_fields.jl")
 include("interp_fields.jl")
+include("global_bcond.jl")
 
 include("Plotting.jl")
 
