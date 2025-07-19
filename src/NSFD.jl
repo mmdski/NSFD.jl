@@ -7,7 +7,7 @@ module NSFD
 
 # Export
 export GridData, StaggeredGrid, meshgrid
-export StaggeredGridFields, set!
+export StaggeredFields, set!
 export InterpolatedVelocity
 
 # boundary conditions

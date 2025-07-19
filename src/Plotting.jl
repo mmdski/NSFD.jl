@@ -7,7 +7,7 @@ module Plotting
 export plot!
 
 using ..NSFD
-import ..NSFD: StaggeredGridFields
+import ..NSFD: StaggeredFields
 
 using CairoMakie
 
@@ -52,7 +52,7 @@ function plot!(ax::Axis, u::NSFD.InterpolatedVelocity, grid_data::GridData, nx=1
     return arrows2d!(vec(X), vec(Y), vec(U), vec(V); kwargs...)
 end
 
-function plot!(ax::Axis, f::StaggeredGridFields, nx::Int, ny::Int)
+function plot!(ax::Axis, f::StaggeredFields, nx::Int, ny::Int)
     h = plot!(ax, f.p)
     u = NSFD.InterpolatedVelocity(f)
     a = plot!(ax, u, f.grid_data, nx, ny)
@@ -60,7 +60,7 @@ function plot!(ax::Axis, f::StaggeredGridFields, nx::Int, ny::Int)
     return h, a
 end
 
-function plot!(ax::Axis, f::StaggeredGridFields)
+function plot!(ax::Axis, f::StaggeredFields)
     nx = max(10, round(Int, f.grid_data.nx / 2))
     aspect = f.grid_data.y_length / f.grid_data.x_length
     ny = round(Int, nx * aspect)

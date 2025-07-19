@@ -102,13 +102,13 @@ function PField(grid_data::GridData, init::Float64)
     return p
 end
 
-struct StaggeredGridFields
+struct StaggeredFields
     grid_data::GridData
     u::UField
     v::VField
     p::PField
 
-    function StaggeredGridFields(grid_data::GridData)
+    function StaggeredFields(grid_data::GridData)
         u = UField(grid_data)
         v = VField(grid_data)
         p = PField(grid_data)
@@ -116,15 +116,15 @@ struct StaggeredGridFields
     end
 end
 
-function StaggeredGridFields(grid_data::GridData, u_init::Float64, v_init::Float64,
-                             p_init::Float64)
-    fields = StaggeredGridFields(grid_data)
+function StaggeredFields(grid_data::GridData, u_init::Float64, v_init::Float64,
+                         p_init::Float64)
+    fields = StaggeredFields(grid_data)
     set!(fields.u, u_init)
     set!(fields.v, v_init)
     set!(fields.p, p_init)
     return fields
 end
 
-function StaggeredGridFields(grid_data::GridData, init::Float64)
-    return StaggeredGridFields(grid_data, init, init, init)
+function StaggeredFields(grid_data::GridData, init::Float64)
+    return StaggeredFields(grid_data, init, init, init)
 end

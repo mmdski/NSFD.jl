@@ -10,7 +10,7 @@ abstract type NBCond <: AbstractGlobalBCond end
 
 struct NOutflowBCond <: NBCond end
 
-function apply!(::NOutflowBCond, fields::StaggeredGridFields)
+function apply!(::NOutflowBCond, fields::StaggeredFields)
     for i in 1:(fields.grid_data.nx)
         fields.u[i, end + 1] = fields.u[i, end]
         fields.v[i, end] = fields.v[i, end - 1]
@@ -26,7 +26,7 @@ function NNoSlipBCond()
     return NNoSlipBCond(0.0)
 end
 
-function apply!(bc::NNoSlipBCond, fields::StaggeredGridFields)
+function apply!(bc::NNoSlipBCond, fields::StaggeredFields)
     for i in 1:(fields.grid_data.nx)
         fields.u[i, end + 1] = 2 * bc.u_wall - fields.u[i, end]
         fields.v[i, end] = 0
@@ -39,7 +39,7 @@ abstract type SBCond <: AbstractGlobalBCond end
 
 struct SOutflowBCond <: SBCond end
 
-function apply!(::SOutflowBCond, fields::StaggeredGridFields)
+function apply!(::SOutflowBCond, fields::StaggeredFields)
     for i in 1:(fields.grid_data.nx)
         fields.u[i, 0] = fields.u[i, 1]
         fields.v[i, 0] = fields.v[i, 1]
@@ -55,7 +55,7 @@ function SNoSlipBCond()
     return SNoSlipBCond(0.0)
 end
 
-function apply!(bc::SNoSlipBCond, fields::StaggeredGridFields)
+function apply!(bc::SNoSlipBCond, fields::StaggeredFields)
     for i in 1:(fields.grid_data.nx)
         fields.u[i, 0] = 2 * bc.u_wall - fields.u[i, 1]
         fields.v[i, 0] = 0
@@ -68,7 +68,7 @@ abstract type EBCond <: AbstractGlobalBCond end
 
 struct EOutflowBCond <: EBCond end
 
-function apply!(::EOutflowBCond, fields::StaggeredGridFields)
+function apply!(::EOutflowBCond, fields::StaggeredFields)
     for j in 1:(fields.grid_data.ny)
         fields.u[end, j] = fields.u[end - 1, j]
         fields.v[end + 1, j] = fields.v[end, j]
@@ -84,7 +84,7 @@ function ENoSlipBCond()
     return ENoSlipBCond(0.0)
 end
 
-function apply!(bc::ENoSlipBCond, fields::StaggeredGridFields)
+function apply!(bc::ENoSlipBCond, fields::StaggeredFields)
     for j in 1:(fields.grid_data.ny)
         fields.u[end, j] = 0
         fields.v[end + 1, j] = 2 * bc.v_wall - fields.v[end, j]
@@ -97,7 +97,7 @@ abstract type WBCond <: AbstractGlobalBCond end
 
 struct WOutflowBCond <: WBCond end
 
-function apply!(::WOutflowBCond, fields::StaggeredGridFields)
+function apply!(::WOutflowBCond, fields::StaggeredFields)
     for j in 1:(fields.grid_data.ny)
         fields.u[0, j] = fields.u[1, j]
         fields.v[0, j] = fields.v[1, j]
@@ -113,7 +113,7 @@ function WNoSlipBCond()
     return WNoSlipBCond(0.0)
 end
 
-function apply!(bc::WNoSlipBCond, fields::StaggeredGridFields)
+function apply!(bc::WNoSlipBCond, fields::StaggeredFields)
     for j in 1:(fields.grid_data.ny)
         fields.u[0, j] = 0
         fields.v[0, j] = 2 * bc.v_wall - fields.v[1, j]
