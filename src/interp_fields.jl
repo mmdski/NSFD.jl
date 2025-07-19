@@ -46,8 +46,12 @@ struct InterpolatedVelocity <: AbstractInterpolatedField
     v::VField
 end
 
-function InterpolatedVelocity(fields::StaggeredFields)
-    return InterpolatedVelocity(fields.u, fields.v)
+function InterpolatedVelocity(field::StaggeredVecField)
+    return InterpolatedVelocity(field.x, field.y)
+end
+
+function InterpolatedVelocity(state::State)
+    return InterpolatedVelocity(state.u.x, state.u.y)
 end
 
 function (u::InterpolatedVelocity)(x, y)

@@ -7,8 +7,9 @@ module NSFD
 
 # Export
 export GridData, StaggeredGrid, meshgrid
-export StaggeredFields, set!
+export StaggeredVec, StaggeredVecField, UField, VField, PField, set!
 export InterpolatedVelocity
+export State
 
 # boundary conditions
 export apply!,
@@ -23,6 +24,21 @@ export apply!,
 
 include("grid.jl")
 include("staggered_fields.jl")
+
+struct State
+    grid_data::GridData
+    u::StaggeredVecField
+    p::PField
+    function State(grid_data::GridData)
+        return new(grid_data, StaggeredVecField(grid_data), PField(grid_data))
+    end
+end
+
+function Base.show(io::IO, state::State)
+    (; nx, ny) = state.p.grid.data
+    return print(io, "$(typeof(state))(size = ($nx, $ny))")
+end
+
 include("interp_fields.jl")
 include("global_bcond.jl")
 
