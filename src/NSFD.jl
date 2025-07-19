@@ -26,6 +26,8 @@ include("staggered_fields.jl")
 include("interp_fields.jl")
 include("global_bcond.jl")
 
+include("time_step.jl")
+
 include("Plotting.jl")
 
 using .Plotting: plot!
