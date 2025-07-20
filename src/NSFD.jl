@@ -7,7 +7,7 @@ module NSFD
 
 # Export
 export GridData, StaggeredGrid, meshgrid
-export StaggeredVec, StaggeredVecField, UField, VField, PField, set!
+export StaggeredVector, StaggeredVectorField, UField, VField, PField, set!
 export InterpolatedVelocity
 export State
 
@@ -27,10 +27,10 @@ include("staggered_fields.jl")
 
 struct State
     grid_data::GridData
-    u::StaggeredVecField
+    u::StaggeredVectorField
     p::PField
     function State(grid_data::GridData)
-        return new(grid_data, StaggeredVecField(grid_data), PField(grid_data))
+        return new(grid_data, StaggeredVectorField(grid_data), PField(grid_data))
     end
 end
 
