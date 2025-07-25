@@ -102,17 +102,19 @@ function PField(grid_data::GridData, init::Float64)
     return p
 end
 
-struct StaggeredVector
-    x::Float64
-    y::Float64
-end
-
 struct StaggeredVectorField
     x::UField
     y::VField
     function StaggeredVectorField(grid_data::GridData)
         return new(UField(grid_data), VField(grid_data))
     end
+end
+
+function StaggeredVectorField(grid_data::GridData, u₀::Tuple{Float64,Float64})
+    u = StaggeredVectorField(grid_data)
+    set!(u.x, u₀[1])
+    set!(u.y, u₀[2])
+    return u
 end
 
 function Base.getindex(field::StaggeredVectorField, i::Int, j::Int)

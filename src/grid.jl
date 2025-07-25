@@ -19,21 +19,6 @@ function offset(::Axis{O}) where {O}
     return O
 end
 
-# GridData
-struct GridData
-    x_length::Float64
-    y_length::Float64
-    nx::Int64
-    ny::Int64
-    Δx::Float64
-    Δy::Float64
-    function GridData(x_length, y_length, nx, ny)
-        Δx = x_length / nx
-        Δy = y_length / ny
-        return new(x_length, y_length, nx, ny, Δx, Δy)
-    end
-end
-
 # GridAxes
 struct GridAxes{XAxis,YAxis}
     x::XAxis
@@ -64,8 +49,9 @@ function Base.show(io::IO, grid::AbstractGrid)
     y_off = offset(grid.axes.y)
     Δx = grid.data.Δx
     Δy = grid.data.Δy
-    return print(io,
-                 "$(typeof(grid))(size = ($nx, $ny), Δ = ($Δx, $Δy), offset = ($x_off, $y_off))")
+    print(io,
+          "$(typeof(grid))(size = ($nx, $ny), Δ = ($Δx, $Δy), offset = ($x_off, $y_off))")
+    return nothing
 end
 
 function indices(grid::AbstractGrid)

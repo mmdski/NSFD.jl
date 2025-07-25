@@ -120,3 +120,27 @@ function apply!(bc::WNoSlipBCond, state::State)
     end
     return state
 end
+
+struct GlobalBCond
+    north::NBCond
+    south::SBCond
+    east::EBCond
+    west::WBCond
+end
+
+function apply!(bc::GlobalBCond, state::State)
+    apply!(bc.north, state)
+    apply!(bc.south, state)
+    apply!(bc.east, state)
+    apply!(bc.west, state)
+    return state
+end
+
+function Base.show(io::IO, bc::GlobalBCond)
+    println(io, "Global Boundary Conditions:")
+    println(io, "  North: ", typeof(bc.north))
+    println(io, "  South: ", typeof(bc.south))
+    println(io, "  East:  ", typeof(bc.east))
+    println(io, "  West:  ", typeof(bc.west))
+    return nothing
+end

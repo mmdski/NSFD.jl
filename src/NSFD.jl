@@ -6,13 +6,17 @@
 module NSFD
 
 # Export
+export ProblemData, TimeSteppingData, PressureIterData
 export GridData, StaggeredGrid, meshgrid
 export StaggeredVector, StaggeredVectorField, UField, VField, PField, set!
 export InterpolatedVelocity
 export State
 
+# operators
+export Advection, Laplacian
+
 # boundary conditions
-export apply!,
+export apply!, GlobalBCond,
 # North
        NOutflowBCond, NNoSlipBCond,
 # South
@@ -22,28 +26,17 @@ export apply!,
 # West
        WOutflowBCond, WNoSlipBCond
 
+include("staggered_vector.jl")
+include("data.jl")
 include("grid.jl")
 include("staggered_fields.jl")
-
-struct State
-    grid_data::GridData
-    u::StaggeredVectorField
-    p::PField
-    function State(grid_data::GridData)
-        return new(grid_data, StaggeredVectorField(grid_data), PField(grid_data))
-    end
-end
-
-function Base.show(io::IO, state::State)
-    (; nx, ny) = state.p.grid.data
-    return print(io, "$(typeof(state))(size = ($nx, $ny))")
-end
-
-include("interp_fields.jl")
-include("global_bcond.jl")
-
+include("geometry.jl")
+include("operators.jl")
+include("state.jl")
 include("time_step.jl")
-
+include("global_bcond.jl")
+include("fg.jl")
+include("interp_fields.jl")
 include("Plotting.jl")
 
 using .Plotting: plot!
