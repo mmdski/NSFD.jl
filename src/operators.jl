@@ -19,6 +19,12 @@ function (op::Laplacian)(a::StaggeredVectorField, i::Int, j::Int)
     return ∂x² + ∂y²
 end
 
+function (op::Laplacian)(p::PField, i::Int, j::Int)
+    ∂x² = (p[i + 1, j] - 2.0 * p[i, j] + p[i - 1, j]) / op.Δx²
+    ∂y² = (p[i, j + 1] - 2.0 * p[i, j] + p[i, j - 1]) / op.Δy²
+    return ∂x² + ∂y²
+end
+
 """
     Advection
 
@@ -85,4 +91,13 @@ end
 function (adv::Advection)(u::StaggeredVectorField, a::StaggeredVectorField, i::Int, j::Int)
     return StaggeredVector(advect_x(a, u, adv.Δx, adv.Δy, adv.γ, i, j),
                            advect_y(a, u, adv.Δx, adv.Δy, adv.γ, i, j))
+end
+
+struct Divergence
+    Δx::Float64
+    Δy::Float64
+end
+
+function (op::Divergence)(u::StaggeredVectorField, i::Int, j::Int)
+    return (u[i, j].x - u[i - 1, j].x) / op.Δx + (u[i, j].y - u[i, j - 1].y) / op.Δy
 end

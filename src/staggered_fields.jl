@@ -127,6 +127,22 @@ function Base.setindex!(field::StaggeredVectorField, vec::StaggeredVector, i::In
     return field
 end
 
+function Base.size(field::StaggeredVectorField)
+    return (field.x.grid.data.nx, field.x.grid.data.ny)
+end
+
+function Base.size(field::StaggeredVectorField, d::Int)
+    return size(field)[d]
+end
+
+function Base.axes(field::StaggeredVectorField)
+    return Base.OneTo.(size(field))
+end
+
+function Base.axes(field::StaggeredVectorField, d::Int)
+    return Base.OneTo(size(field, d))
+end
+
 function Base.show(io::IO, field::StaggeredVectorField)
     nx, ny = field.x.grid.data.nx, field.x.grid.data.ny
     return print(io, "$(typeof(field))(size = ($nx, $ny))")

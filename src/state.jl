@@ -4,11 +4,11 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 struct State
-    grid_data::GridData
+    geometry::Geometry
     problem_data::ProblemData
     time_data::TimeSteppingData
     p_iter_data::PressureIterData
-    geometry::Geometry
+
     u::StaggeredVectorField
     p::PField
 end
@@ -16,12 +16,12 @@ end
 function State(grid_data::GridData, problem_data::ProblemData, time_data::TimeSteppingData,
                p_iter_data::PressureIterData)
     u = StaggeredVectorField(grid_data)
-    p = StaggeredScalarField(grid_data)
+    p = PField(grid_data)
     geometry = Geometry(grid_data)
-    return State(grid_data, problem_data, time_data, p_iter_data, geometry, u, p)
+    return State(geometry, problem_data, time_data, p_iter_data, u, p)
 end
 
 function Base.show(io::IO, state::State)
-    (; nx, ny) = state.p.grid.data
+    (; nx, ny) = state.geometry.grid_data
     return print(io, "$(typeof(state))(size = ($nx, $ny))")
 end

@@ -11,7 +11,7 @@ abstract type NBCond <: AbstractGlobalBCond end
 struct NOutflowBCond <: NBCond end
 
 function apply!(::NOutflowBCond, state::State)
-    for i in 1:(state.grid_data.nx)
+    for i in 1:(state.geometry.grid_data.nx)
         state.u.x[i, end + 1] = state.u.x[i, end]
         state.u.y[i, end] = state.u.y[i, end - 1]
     end
@@ -27,7 +27,7 @@ function NNoSlipBCond()
 end
 
 function apply!(bc::NNoSlipBCond, state::State)
-    for i in 1:(state.grid_data.nx)
+    for i in 1:(state.geometry.grid_data.nx)
         state.u.x[i, end + 1] = 2 * bc.u_wall - state.u.x[i, end]
         state.u.y[i, end] = 0
     end
@@ -40,7 +40,7 @@ abstract type SBCond <: AbstractGlobalBCond end
 struct SOutflowBCond <: SBCond end
 
 function apply!(::SOutflowBCond, state::State)
-    for i in 1:(state.grid_data.nx)
+    for i in 1:(state.geometry.grid_data.nx)
         state.u.x[i, 0] = state.u.x[i, 1]
         state.u.y[i, 0] = state.u.y[i, 1]
     end
@@ -56,7 +56,7 @@ function SNoSlipBCond()
 end
 
 function apply!(bc::SNoSlipBCond, state::State)
-    for i in 1:(state.grid_data.nx)
+    for i in 1:(state.geometry.grid_data.nx)
         state.u.x[i, 0] = 2 * bc.u_wall - state.u.x[i, 1]
         state.u.y[i, 0] = 0
     end
@@ -69,7 +69,7 @@ abstract type EBCond <: AbstractGlobalBCond end
 struct EOutflowBCond <: EBCond end
 
 function apply!(::EOutflowBCond, state::State)
-    for j in 1:(state.grid_data.ny)
+    for j in 1:(state.geometry.grid_data.ny)
         state.u.x[end, j] = state.u.x[end - 1, j]
         state.u.y[end + 1, j] = state.u.y[end, j]
     end
@@ -85,7 +85,7 @@ function ENoSlipBCond()
 end
 
 function apply!(bc::ENoSlipBCond, state::State)
-    for j in 1:(state.grid_data.ny)
+    for j in 1:(state.geometry.grid_data.ny)
         state.u.x[end, j] = 0
         state.u.y[end + 1, j] = 2 * bc.v_wall - state.u.y[end, j]
     end
@@ -98,7 +98,7 @@ abstract type WBCond <: AbstractGlobalBCond end
 struct WOutflowBCond <: WBCond end
 
 function apply!(::WOutflowBCond, state::State)
-    for j in 1:(state.grid_data.ny)
+    for j in 1:(state.geometry.grid_data.ny)
         state.u.x[0, j] = state.u.x[1, j]
         state.u.y[0, j] = state.u.y[1, j]
     end
@@ -114,7 +114,7 @@ function WNoSlipBCond()
 end
 
 function apply!(bc::WNoSlipBCond, state::State)
-    for j in 1:(state.grid_data.ny)
+    for j in 1:(state.geometry.grid_data.ny)
         state.u.x[0, j] = 0
         state.u.y[0, j] = 2 * bc.v_wall - state.u.y[1, j]
     end

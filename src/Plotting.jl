@@ -63,14 +63,14 @@ end
 function plot!(ax::Axis, state::State, nx::Int, ny::Int)
     h = plot!(ax, state.p)
     u = NSFD.InterpolatedVelocity(state.u)
-    a = plot!(ax, u, state.grid_data, nx, ny)
-    plot!(ax, state.grid_data)
+    a = plot!(ax, u, state.geometry.grid_data, nx, ny)
+    plot!(ax, state.geometry.grid_data)
     return h, a
 end
 
 function plot!(ax::Axis, state::State)
-    nx = max(10, round(Int, state.grid_data.nx / 2))
-    aspect = state.grid_data.y_length / state.grid_data.x_length
+    nx = max(10, round(Int, state.geometry.grid_data.nx / 2))
+    aspect = state.geometry.grid_data.y_length / state.geometry.grid_data.x_length
     if aspect ≤ 1.0
         nx = 10
         ny = round(Int, nx * aspect)

@@ -6,11 +6,13 @@
 module NSFD
 
 # Export
-export ProblemData, TimeSteppingData, PressureIterData
-export GridData, StaggeredGrid, meshgrid
-export StaggeredVector, StaggeredVectorField, UField, VField, PField, set!
-export InterpolatedVelocity
+export GridData, ProblemData, TimeSteppingData, PressureIterData
+export StaggeredGrid, meshgrid
+export StaggeredVector
+export StaggeredVectorField, StaggeredScalarField, UField, VField, PField, set!
 export State
+
+export InterpolatedVelocity
 
 # operators
 export Advection, Laplacian
@@ -36,6 +38,8 @@ include("state.jl")
 include("time_step.jl")
 include("global_bcond.jl")
 include("fg.jl")
+include("rhs.jl")
+include("iter_pressure.jl")
 include("interp_fields.jl")
 include("Plotting.jl")
 

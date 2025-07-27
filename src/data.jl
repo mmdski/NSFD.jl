@@ -17,6 +17,12 @@ struct GridData
     end
 end
 
+function GridData(nx::Int, ny::Int, Δx::Float64, Δy::Float64)
+    x_length = nx * Δx
+    y_length = ny * Δy
+    return GridData(x_length, y_length, nx, ny)
+end
+
 struct ProblemData
     Re::Float64 # Reynolds number
     G::StaggeredVector # acceleration due to gravity
