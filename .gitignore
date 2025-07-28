@@ -1,1 +1,7 @@
 Manifest*.toml
+
+*.jl~
+*.jl#*
+.#*.jl
+
+.DS_Store
