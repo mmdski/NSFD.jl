@@ -763,11 +763,11 @@ Initialize the data arrays
 
   f = Figure();
   ax = Axis(f[1, 1]; aspect=DataAspect());
+  heatmap!(ax, 0:δx:x_length, 0:δy:y_length,
+           p.values[2:(end - 1), 2:(end - 1)]);
   arrows2d!(ax,
             vec(X), vec(Y),
             vec(scale .* U_interp), vec(scale .* V_interp))
-  heatmap!(ax, 0:δx:x_length, 0:δy:y_length,
-           p.values[2:(end - 1), 2:(end - 1)]);
 
   save("cavity.png", f)
 #+end_src
