@@ -4,14 +4,14 @@
 #+startup: overview
 #+startup: inlineimages
 
+#+caption: Lid-driven cavity velocity and pressure fields at steady state.
 [[file:cavity.png]]
-Lid-driven cavity velocity and pressure fields at steady state.
 
-Lid-driven cavity solution implemented in Julia, based on the staggered-grid finite-difference formulation of Griebel /et al./[fn:griebel].
+Lid-driven cavity solution implemented in Julia, based on the staggered-grid finite-difference formulation of formulation of [[https://epubs.siam.org/doi/book/10.1137/1.9780898719703][Griebel et al. (1998)]].
 
 See [[file:cavity.org]] for code.
 
-[fn:griebel] U. Griebel, T. Dornseifer, and T. Neunhoeffer,
+U. Griebel, T. Dornseifer, and T. Neunhoeffer,
 *Numerical Simulation in Fluid Dynamics: A Practical Introduction*,
 Society for Industrial and Applied Mathematics (SIAM),
 Philadelphia, PA, 1998.
