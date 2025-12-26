@@ -1,5 +1,0 @@
-[deps]
-JuliaFormatter = "98e50ef6-434e-11e9-1051-2b60c6c9e899"
-NSFD = "09ffc641-5453-42d0-a4b3-c4b7525e2ea1"
-OhMyREPL = "5fb14364-9ced-5910-84b2-373655c76a03"
-Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"

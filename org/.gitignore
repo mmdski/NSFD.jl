@@ -1,3 +1,11 @@
+Manifest*.toml
+
+*.jl~
+*.jl#*
+.#*.jl
+
+.DS_Store
+
 nsfd.jl
 cavity.jl
 cavity_app.jl
