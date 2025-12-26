@@ -1,7 +1,34 @@
-* Staggered Field
+#+title: NSFD - Lid-Driven Cavity
+#+author: Marian Domanski
+#+date: <2025-12-26 Fri 10:03>
+#+startup: overview
+#+startup: latexpreview
+#+startup: inlineimages
+
+[[file:cavity.png]]
+
+* NSDF Core
 :PROPERTIES:
 :header-args:julia: :results none :tangle "nsfd.jl"
 :END:
+
+** Staggered Field Type
+
+- Roles that the ~StaggeredField~ objects serve
+- Primarily used for method dispatch
+
+#+begin_src julia
+  struct U end  # x-direction velocity
+  struct V end  # y-direction velocity
+  struct P end  # pressure
+
+  struct F end
+  struct G end
+  struct RHS end  # right-hand side of the pressure equation
+
+  struct PRes end  # pressure residual
+#+end_src
+
 #+begin_src julia
   struct StaggeredField{Role}
       values::Matrix{Float64}
@@ -54,80 +81,8 @@
   end
 #+end_src
 
-* Roles
-:PROPERTIES:
-:header-args:julia: :results none :tangle "nsfd.jl"
-:END:
-
-Roles that the ~StaggeredField~ objects play.
-
-#+begin_src julia
-  struct U end  # x-direction velocity
-  struct V end  # y-direction velocity
-  struct P end  # pressure
-
-  struct F end
-  struct G end
-  struct RHS end
-
-  struct PRes end
-#+end_src
-* Boundary Value Applications
-:PROPERTIES:
-:header-args:julia: :results none :tangle "nsfd.jl"
-:END:
-
-#+begin_src julia
-    function set_n_bv!(u::StaggeredField{U}, v::StaggeredField{V},
-                     imax::Int, jmax::Int)
-      # moving lid for U BC
-      U_lid = 1.0
-      for i in 1:imax
-          u[i, jmax + 1] = 2 * U_lid - u[i, jmax]
-          v[i, jmax] = 0.0
-      end
-  end
-
-  function set_s_bv!(u::StaggeredField{U}, v::StaggeredField{V},
-                     imax::Int, ::Int)
-      for i in 1:imax
-          u[i, 0] = -u[i, 1]
-          v[i, 0] = 0.0
-      end
-  end
-
-  function set_e_bv!(u::StaggeredField{U}, v::StaggeredField{V},
-                     imax::Int, jmax::Int)
-      for j in 1:jmax
-          u[imax, j] = 0.0
-          v[imax + 1, j] = -v[imax, j]
-      end
-  end
-
-  function set_w_bv!(u::StaggeredField{U}, v::StaggeredField{V},
-                     ::Int, jmax::Int)
-      for j in 1:jmax
-          u[0, j] = 0.0
-          v[0, j] = -v[1, j]
-      end
-  end
-
-  function set_bv!(u::StaggeredField{U}, v::StaggeredField{V},
-                   imax::Int, jmax::Int)
-      set_n_bv!(u, v, imax, jmax)
-      set_s_bv!(u, v, imax, jmax)
-      set_e_bv!(u, v, imax, jmax)
-      set_w_bv!(u, v, imax, jmax)
-      return
-  end
-
-#+end_src
-* Operators
-:PROPERTIES:
-:header-args:julia: :results none :tangle "nsfd.jl"
-:END:
-
-** Laplacian
+** Operators
+*** Laplacian
 
 \begin{equation*}
 \left[\frac{\partial^2 f}{\partial x^2}\right]_{i,j} + \left[\frac{\partial^2 f}{\partial y^2}\right]_{i,j}
@@ -141,7 +96,7 @@ Roles that the ~StaggeredField~ objects play.
   end
 #+end_src
 
-** Divergence
+*** Divergence
 
 \begin{equation*}
 \frac{F^{(n)}_{i,j} - F^{(n)}_{i-1,j}}{\delta x} + \frac{G^{(n)}_{i,j} - G^{(n)}_{i,j-1}}{\delta y}
@@ -153,10 +108,10 @@ Roles that the ~StaggeredField~ objects play.
   end
 #+end_src
 
-** Advection
+*** Advection
 
-*** Advection in the x-direction
-**** Advection of u in x-direction
+**** Advection in the x-direction
+***** Advection of u in x-direction
 \begin{equation*}
 \left[\frac{\partial(u^2)}{\partial x}\right]_{i,j}
 \end{equation*}
@@ -172,7 +127,7 @@ Roles that the ~StaggeredField~ objects play.
   end
 #+end_src
 
-**** Advection of v in x-direction
+***** Advection of v in x-direction
 \begin{equation*}
 \left[\frac{\partial(uv)}{\partial x}\right]_{i,j}
 \end{equation*}
@@ -189,8 +144,8 @@ Roles that the ~StaggeredField~ objects play.
 
 #+end_src
 
-*** Advection in the y-direction
-**** Advection of u in y-direction
+**** Advection in the y-direction
+***** Advection of u in y-direction
 
 \begin{equation*}
 \left[\frac{\partial(uv)}{\partial y}\right]_{i,j}
@@ -207,7 +162,7 @@ Roles that the ~StaggeredField~ objects play.
                               abs(kd) * (u[i, j - 1] - u[i, j]) / 2.0))
   end
 #+end_src
-**** Advection of v in y-direction
+***** Advection of v in y-direction
 
 \begin{equation*}
 \left[\frac{\partial(v^2)}{\partial y}\right]_{i,j}
@@ -225,7 +180,7 @@ Roles that the ~StaggeredField~ objects play.
   end
 #+end_src
 
-*** Total advection of u
+**** Total advection of u
 
 \begin{equation*}
 \left[\frac{\partial(u^2)}{\partial x}\right]_{i,j} + \left[\frac{\partial(uv)}{\partial y}\right]_{i,j}
@@ -239,7 +194,7 @@ Roles that the ~StaggeredField~ objects play.
   end
 #+end_src
 
-*** Total advection of v
+**** Total advection of v
 
 \begin{equation*}
 \left[\frac{\partial(uv)}{\partial x}\right]_{i,j} + \left[\frac{\partial(v^2)}{\partial y}\right]_{i,j}
@@ -253,11 +208,7 @@ Roles that the ~StaggeredField~ objects play.
   end
 #+end_src
 
-* Time
-:PROPERTIES:
-:header-args:julia: :results none :tangle "nsfd.jl"
-:END:
-
+** Time
 \begin{equation*}
 \delta t \coloneq \tau \min\left(\frac{Re}{2}\left(\frac{1}{\delta x^2} + \frac{1}{\delta y^2}\right)^{-1}, \frac{\delta x}{\lvert u_{\max}\rvert}, \frac{\delta y}{\lvert v_{\max}\rvert}\right)
 \end{equation*}
@@ -272,10 +223,11 @@ Roles that the ~StaggeredField~ objects play.
   end
 #+end_src
 
-* F and G
-:PROPERTIES:
-:header-args:julia: :results none :tangle "nsfd.jl"
-:END:
+** Intermediate Velocities (F and G)
+
+\begin{equation*}
+F_{i,j} \coloneqq u_{i,j} + \Delta t\left(\frac{1}{Re}\left(\left[\frac{\partial^2u}{\partial x^2}\right]_{i,j} + \left[\frac{\partial^2 u}{\partial y^2}\right]_{i,j}\right) - \left[\frac{\left(\partial u^2\right)}{\partial x}\right]_{i,j} - \left[\frac{\partial \left(uv\right)}{\partial y}\right]_{i,j} + g_x\right)
+\end{equation*}
 
 #+begin_src julia
   function compute_f(u::StaggeredField{U}, v::StaggeredField{V},
@@ -288,19 +240,9 @@ Roles that the ~StaggeredField~ objects play.
   end
 #+end_src
 
-#+begin_src julia
-  function fill_f!(f::StaggeredField{F},
-                   u::StaggeredField{U}, v::StaggeredField{V},
-                   δx::Float64, δy::Float64, δt::Float64,
-                   GX::Float64, Re::Float64, γ::Float64,
-                   imax::Int, jmax::Int)
-      for j in 1:jmax
-          for i in 1:(imax - 1)
-              f[i,j] = compute_f(u, v, δx, δy, δt, GX, Re, γ, i, j)
-          end
-      end
-  end
-#+end_src
+\begin{equation*}
+G_{i,j} \coloneqq v_{i,j} + \Delta t\left(\frac{1}{Re}\left(\left[\frac{\partial^2v}{\partial x^2}\right]_{i,j} + \left[\frac{\partial^2 v}{\partial y^2}\right]_{i,j}\right) - \left[\frac{\left(\partial uv\right)}{\partial x}\right]_{i,j} - \left[\frac{\partial \left(v^2\right)}{\partial y}\right]_{i,j} + g_y\right)
+\end{equation*}
 
 #+begin_src julia
   function compute_g(u::StaggeredField{U}, v::StaggeredField{V},
@@ -313,39 +255,9 @@ Roles that the ~StaggeredField~ objects play.
   end
 #+end_src
 
-#+begin_src julia
-  function fill_g!(g::StaggeredField{G},
-                   u::StaggeredField{U}, v::StaggeredField{V},
-                   δx::Float64, δy::Float64, δt::Float64,
-                   GY::Float64, Re::Float64, γ::Float64,
-                   imax::Int, jmax::Int)
-      for j in 1:(jmax - 1)
-          for i in 1:imax
-              g[i,j] = compute_g(u, v, δx, δy, δt, GY, Re, γ, i, j)
-          end
-      end
-  end
-#+end_src
+** Pressure
 
-#+begin_src julia
-  function set_bv!(u::StaggeredField{U}, v::StaggeredField{V},
-                   f::StaggeredField{F}, g::StaggeredField{G},
-                   imax::Int, jmax::Int)
-      for i in 1:imax
-          g[i, 0] = v[i, 0]
-          g[i, jmax] = v[i, jmax]
-      end
-      for j in 1:jmax
-          f[0, j] = u[0, j]
-          f[imax, j] = u[imax, j]
-      end
-  end
-#+end_src
-
-* Right-hand Side of Pressure Equation
-:PROPERTIES:
-:header-args:julia: :results none :tangle "nsfd.jl"
-:END:
+*** Right-hand Side of Pressure Equation
 
    \begin{equation*}
    rhs_{i,j} = \frac{1}{\delta t}\left(\frac{F^{(n)}_{i,j} - F^{(n)}_{i-1,j}}{\delta x} + \frac{G^{(n)}_{i,j} - G^{(n)}_{i,j-1}}{\delta y}\right)
@@ -359,24 +271,7 @@ Roles that the ~StaggeredField~ objects play.
   end
 #+end_src
 
-#+begin_src julia
-  function fill_rhs!(rhs::StaggeredField{RHS},
-                     f::StaggeredField{F}, g::StaggeredField{G},
-                     δx::Float64, δy::Float64, δt::Float64,
-                     imax::Int, jmax::Int)
-      for j in 1:jmax
-          for i in 1:imax
-              rhs[i,j] = compute_rhs(f, g, δx, δy, δt, i, j)
-          end
-      end
-  end
-
-#+end_src
-
-* Pressure
-:PROPERTIES:
-:header-args:julia: :results none :tangle "nsfd.jl"
-:END:
+*** SOR Iteration of Pressure
 
 \begin{equation*}
 p^{\mathrm{it}+1}_{i,j} \coloneqq (1 - \omega)p^{\mathrm{it}}_{i,j} + \frac{\omega}{\frac{2}{\delta x^2} + \frac{2}{\delta y^2}}\left(\frac{p^{\mathrm{it}}_{i+1,j} + p^{\mathrm{it}+1}_{i-1,j}}{\delta x^2} + \frac{p^{\mathrm{it}}_{i,j+1} + p^{\mathrm{it}+1}_{i,j-1}}{\delta y^2} - rhs_{i,j}\right)
@@ -393,6 +288,8 @@ p^{\mathrm{it}+1}_{i,j} \coloneqq (1 - \omega)p^{\mathrm{it}}_{i,j} + \frac{\ome
   end
 #+end_src
 
+*** Iteration Residual
+
 \begin{equation*}
 r^{\mathrm{it}}_{i,j} \coloneqq \nabla^2 p^{\mathrm{it}} - rhs_{i,j}
 \end{equation*}
@@ -404,6 +301,209 @@ r^{\mathrm{it}}_{i,j} \coloneqq \nabla^2 p^{\mathrm{it}} - rhs_{i,j}
       return lap(p_it, δx, δy, i, j) - rhs[i,j]
   end
 #+end_src
+
+** Velocity
+
+\begin{equation*}
+u^{n+1}_{i,j} = F^{(n)}_{i,j} - \frac{\delta t}{\delta x}\left(p^{(n+1)}_{i+1,j} - p^{(n+1)}_{i,j}\right)
+\end{equation*}
+
+$i = 1,\dots,i_{\max}-1$, $j = 1,\dots,j_{\max}$
+
+#+begin_src julia
+  function comp_u_next(f::StaggeredField{F}, p::StaggeredField{P},
+                  δx::Float64, δt::Float64,
+                  i::Int, j::Int)
+      return f[i,j] - δt/δx*(p[i+1,j] - p[i,j])
+  end
+#+end_src
+
+  \begin{equation*}
+  v^{n+1}_{i,j} = G^{(n)}_{i,j} - \frac{\delta t}{\delta y}\left(p^{(n+1)}_{i,j+1} - p^{(n+1)}_{i,j}\right)
+  \end{equation*}
+
+$i = 1,\dots,i_{\max}$, $j = 1,\dots,j_{\max} - 1$
+
+#+begin_src julia
+  function comp_v_next(g::StaggeredField{G}, p::StaggeredField{P},
+                  δy::Float64, δt::Float64,
+                  i::Int, j::Int)
+      return g[i,j] - δt/δy*(p[i,j+1] - p[i,j])
+  end
+#+end_src
+
+** Interpolate
+
+- Interpolate the staggered grid velocities to a co-located point.
+
+*** Interpolate U
+
+#+begin_src julia
+  function interpolate(u::StaggeredField{U},
+                       δx::Float64, δy::Float64,
+                       x::Float64, y::Float64)
+      i = Int(floor(x / δx)) + 1
+      j = Int(floor((y + δy / 2) / δy)) + 1
+      x₁ = (i - 1.0) * δx
+      x₂ = i * δx
+      y₁ = ((j - 1.0) - 0.5) * δy
+      y₂ = (j - 0.5) * δy
+      u₁ = u[i - 1, j - 1]
+      u₂ = u[i, j - 1]
+      u₃ = u[i - 1, j]
+      u₄ = u[i, j]
+      return 1 / (δx * δy) *
+             ((x₂ - x) * (y₂ - y) * u₁ +
+              (x - x₁) * (y₂ - y) * u₂ +
+              (x₂ - x) * (y - y₁) * u₃ +
+              (x - x₁) * (y - y₁) * u₄)
+  end
+#+end_src
+
+*** Interpolate V
+
+#+begin_src julia
+  function interpolate(v::StaggeredField{V},
+                       δx::Float64, δy::Float64,
+                       x::Float64, y::Float64)
+      i = Int(floor((x + δx / 2) / δx)) + 1
+      j = Int(floor(y / δy)) + 1
+      x₁ = ((i - 1) - 0.5)δx
+      x₂ = (i - 0.5) * δx
+      y₁ = (j - 1) * δy
+      y₂ = j * δy
+      v₁ = v[i - 1, j - 1]
+      v₂ = v[i, j - 1]
+      v₃ = v[i - 1, j]
+      v₄ = v[i, j]
+      return 1 / (δx * δy) *
+             ((x₂ - x) * (y₂ - y) * v₁ +
+              (x - x₁) * (y₂ - y) * v₂ +
+              (x₂ - x) * (y - y₁) * v₃ +
+              (x - x₁) * (y - y₁) * v₄)
+  end
+#+end_src
+
+* Lid-Driven Cavity
+:PROPERTIES:
+:header-args:julia: :results none :tangle "cavity.jl"
+:END:
+
+#+begin_src julia
+  include("nsfd.jl")
+#+end_src
+
+** Velocity
+*** Fill
+
+Compute velocities of next time step for entire interior domain
+
+#+begin_src julia
+  function fill_u_next!(u_next::StaggeredField{U},
+                        f::StaggeredField{F}, p::StaggeredField{P},
+                        δx::Float64, δt::Float64,
+                        imax::Int, jmax::Int)
+      for j in 1:jmax
+          for i in 1:(imax-1)
+              u_next[i,j] = comp_u_next(f, p, δx, δt, i, j)
+          end
+      end
+  end
+#+end_src
+
+#+begin_src julia
+    function fill_v_next!(v_next::StaggeredField{V},
+                        g::StaggeredField{G}, p::StaggeredField{P},
+                        δy::Float64, δt::Float64,
+                        imax::Int, jmax::Int)
+      for j in 1:(jmax-1)
+          for i in 1:imax
+              v_next[i,j] = comp_v_next(g, p, δy, δt, i, j)
+          end
+      end
+  end
+#+end_src
+
+*** Boundary Values
+***** North
+
+The north velocity boundary condition is set to a moving lid.
+
+#+begin_src julia
+    function set_n_bv!(u::StaggeredField{U}, v::StaggeredField{V},
+                     imax::Int, jmax::Int)
+      # moving lid for U BC
+      U_lid = 1.0
+      for i in 1:imax
+          u[i, jmax + 1] = 2 * U_lid - u[i, jmax]
+          v[i, jmax] = 0.0
+      end
+  end
+#+end_src
+
+***** South
+
+No-slip
+
+#+begin_src julia
+  function set_s_bv!(u::StaggeredField{U}, v::StaggeredField{V},
+                     imax::Int, ::Int)
+      for i in 1:imax
+          u[i, 0] = -u[i, 1]
+          v[i, 0] = 0.0
+      end
+  end
+#+end_src
+
+***** East
+
+No-slip
+
+#+begin_src julia
+  function set_e_bv!(u::StaggeredField{U}, v::StaggeredField{V},
+                     imax::Int, jmax::Int)
+      for j in 1:jmax
+          u[imax, j] = 0.0
+          v[imax + 1, j] = -v[imax, j]
+      end
+  end
+#+end_src
+
+***** West
+
+No-slip
+
+#+begin_src julia
+  function set_w_bv!(u::StaggeredField{U}, v::StaggeredField{V},
+                     ::Int, jmax::Int)
+      for j in 1:jmax
+          u[0, j] = 0.0
+          v[0, j] = -v[1, j]
+      end
+  end
+#+end_src
+
+***** Velocity combined
+
+#+begin_src julia
+  function set_bv!(u::StaggeredField{U}, v::StaggeredField{V},
+                   imax::Int, jmax::Int)
+      set_n_bv!(u, v, imax, jmax)
+      set_s_bv!(u, v, imax, jmax)
+      set_e_bv!(u, v, imax, jmax)
+      set_w_bv!(u, v, imax, jmax)
+      return
+  end
+#+end_src
+
+** Pressure
+*** Boundary Values
+
+Homogeneous Neumann
+
+\begin{equation*}
+\frac{\partial p}{\partial \mathbf{n}} = 0
+\end{equation*}
 
 #+begin_src julia
   function set_bv!(p::StaggeredField{P}, imax::Int, jmax::Int)
@@ -418,12 +518,33 @@ r^{\mathrm{it}}_{i,j} \coloneqq \nabla^2 p^{\mathrm{it}} - rhs_{i,j}
   end
 #+end_src
 
+*** Right-Hand Side of Pressure Equation
+
+#+begin_src julia
+  function fill_rhs!(rhs::StaggeredField{RHS},
+                     f::StaggeredField{F}, g::StaggeredField{G},
+                     δx::Float64, δy::Float64, δt::Float64,
+                     imax::Int, jmax::Int)
+      for j in 1:jmax
+          for i in 1:imax
+              rhs[i,j] = compute_rhs(f, g, δx, δy, δt, i, j)
+          end
+      end
+  end
+
+#+end_src
+
+*** Pressure Iteration
+
+Iterate to solve for pressure over the interior domain
+
 #+begin_src julia
   function iter_pressure(p::StaggeredField{P}, rhs::StaggeredField{RHS},
                          p_res::StaggeredField{PRes},
                          δx::Float64, δy::Float64,
                          ω::Float64, ϵₚ::Float64,
-                         iter_max::Int, imax::Int, jmax::Int)
+                         iter_max::Int, imax::Int, jmax::Int,
+                         set_bv!::F) where {F}
 
       it = 0
 
@@ -456,132 +577,197 @@ r^{\mathrm{it}}_{i,j} \coloneqq \nabla^2 p^{\mathrm{it}} - rhs_{i,j}
   end
 #+end_src
 
-* Velocity
-:PROPERTIES:
-:header-args:julia: :results none :tangle "nsfd.jl"
-:END:
+** Intermediate Velocities (F and G)
+*** Fill
 
-\begin{equation*}
-u^{n+1}_{i,j} = F^{(n)}_{i,j} - \frac{\delta t}{\delta x}\left(p^{(n+1)}_{i+1,j} - p^{(n+1)}_{i,j}\right)
-\end{equation*}
-
-$i = 1,\dots,i_{\max}-1$, $j = 1,\dots,j_{\max}$
+These functions fill the intermediate velocity fields (F and G) for the entire interior/computational domain.
 
 #+begin_src julia
-  function comp_u_next(f::StaggeredField{F}, p::StaggeredField{P},
-                  δx::Float64, δt::Float64,
-                  i::Int, j::Int)
-      return f[i,j] - δt/δx*(p[i+1,j] - p[i,j])
-  end
-#+end_src
-
-#+begin_src julia
-  function fill_u_next!(u_next::StaggeredField{U},
-                        f::StaggeredField{F}, p::StaggeredField{P},
-                        δx::Float64, δt::Float64,
-                        imax::Int, jmax::Int)
+  function fill_f!(f::StaggeredField{F},
+                   u::StaggeredField{U}, v::StaggeredField{V},
+                   δx::Float64, δy::Float64, δt::Float64,
+                   GX::Float64, Re::Float64, γ::Float64,
+                   imax::Int, jmax::Int)
       for j in 1:jmax
-          for i in 1:(imax-1)
-              u_next[i,j] = comp_u_next(f, p, δx, δt, i, j)
+          for i in 1:(imax - 1)
+              f[i,j] = compute_f(u, v, δx, δy, δt, GX, Re, γ, i, j)
           end
       end
   end
 #+end_src
 
-  \begin{equation*}
-  v^{n+1}_{i,j} = G^{(n)}_{i,j} - \frac{\delta t}{\delta y}\left(p^{(n+1)}_{i,j+1} - p^{(n+1)}_{i,j}\right)
-  \end{equation*}
-
-$i = 1,\dots,i_{\max}$, $j = 1,\dots,j_{\max} - 1$
-
 #+begin_src julia
-  function comp_v_next(g::StaggeredField{G}, p::StaggeredField{P},
-                  δy::Float64, δt::Float64,
-                  i::Int, j::Int)
-      return g[i,j] - δt/δy*(p[i,j+1] - p[i,j])
-  end
-#+end_src
-
-#+begin_src julia
-    function fill_v_next!(v_next::StaggeredField{V},
-                        g::StaggeredField{G}, p::StaggeredField{P},
-                        δy::Float64, δt::Float64,
-                        imax::Int, jmax::Int)
-      for j in 1:(jmax-1)
+  function fill_g!(g::StaggeredField{G},
+                   u::StaggeredField{U}, v::StaggeredField{V},
+                   δx::Float64, δy::Float64, δt::Float64,
+                   GY::Float64, Re::Float64, γ::Float64,
+                   imax::Int, jmax::Int)
+      for j in 1:(jmax - 1)
           for i in 1:imax
-              v_next[i,j] = comp_v_next(g, p, δy, δt, i, j)
+              g[i,j] = compute_g(u, v, δx, δy, δt, GY, Re, γ, i, j)
           end
       end
   end
 #+end_src
 
-* Interpolate
+*** Boundary Values
+
+#+begin_src julia
+  function set_bv!(u::StaggeredField{U}, v::StaggeredField{V},
+                   f::StaggeredField{F}, g::StaggeredField{G},
+                   imax::Int, jmax::Int)
+      for i in 1:imax
+          g[i, 0] = v[i, 0]
+          g[i, jmax] = v[i, jmax]
+      end
+      for j in 1:jmax
+          f[0, j] = u[0, j]
+          f[imax, j] = u[imax, j]
+      end
+  end
+#+end_src
+
+* Application
 :PROPERTIES:
-:header-args:julia: :results none :tangle "nsfd.jl"
+:header-args:julia: :results none :tangle "cavity_app.jl"
 :END:
 
 #+begin_src julia
-  function interpolate(u::StaggeredField{U},
-                       δx::Float64, δy::Float64,
-                       x::Float64, y::Float64)
-      i = Int(floor(x / δx)) + 1
-      j = Int(floor((y + δy / 2) / δy)) + 1
-      x₁ = (i - 1.0) * δx
-      x₂ = i * δx
-      y₁ = ((j - 1.0) - 0.5) * δy
-      y₂ = (j - 0.5) * δy
-      u₁ = u[i - 1, j - 1]
-      u₂ = u[i, j - 1]
-      u₃ = u[i - 1, j]
-      u₄ = u[i, j]
-      return 1 / (δx * δy) *
-             ((x₂ - x) * (y₂ - y) * u₁ +
-              (x - x₁) * (y₂ - y) * u₂ +
-              (x₂ - x) * (y - y₁) * u₃ +
-              (x - x₁) * (y - y₁) * u₄)
-  end
+  using GLMakie
 #+end_src
 
 #+begin_src julia
-  function interpolate(v::StaggeredField{V},
-                       δx::Float64, δy::Float64,
-                       x::Float64, y::Float64)
-      i = Int(floor((x + δx / 2) / δx)) + 1
-      j = Int(floor(y / δy)) + 1
-      x₁ = ((i - 1) - 0.5)δx
-      x₂ = (i - 0.5) * δx
-      y₁ = (j - 1) * δy
-      y₂ = j * δy
-      v₁ = v[i - 1, j - 1]
-      v₂ = v[i, j - 1]
-      v₃ = v[i - 1, j]
-      v₄ = v[i, j]
-      return 1 / (δx * δy) *
-             ((x₂ - x) * (y₂ - y) * v₁ +
-              (x - x₁) * (y₂ - y) * v₂ +
-              (x₂ - x) * (y - y₁) * v₃ +
-              (x - x₁) * (y - y₁) * v₄)
+  include("cavity.jl")
+#+end_src
+
+** Problem Set-Up
+*** Geometry Data
+
+#+begin_src julia
+  x_length = 1.0        # domain size in x-direction
+  y_length = 1.0        # domain size in y-direction
+  imax = 128            # number of interior cells in x-direction
+  jmax = 128            # number of interior cells in y-direction
+  δx = x_length / imax  # length of one cell in x-direction
+  δy = y_length / jmax  # length of one cell in y-direction
+#+end_src
+
+*** Time-Stepping Data
+
+#+begin_src julia
+  t = 0.0       # set initial time to zero
+  t_end = 20.0  # final time
+  τ = 0.5       # safety factor for time step size control
+#+end_src
+
+*** Pressure-Iteration Data
+
+#+begin_src julia
+  iter_max = 100  # maximal number of pressure iterations in one time step
+  ϵₚ = 0.001      # stopping tolerance for pressure iteration
+  ω = 1.7         # relaxation parameter for SOR iteration
+  γ = 0.9         # upwind differencing factor
+#+end_src
+
+*** Problem-Dependent Quantities
+
+#+begin_src julia
+  Re = 1000.0  # Reynolds number
+  GX = 0.0     # body force in x-direction
+  GY = 0.0     # body force in y-direction
+  UI = 0.0     # initial velocity in x-direction
+  VI = 0.0     # initial velocity in y-direction
+  PI = 0.0     # initial pressure
+#+end_src
+
+*** Data Arrays
+
+#+begin_src julia
+  u = StaggeredField(U, imax, jmax)  # velocity in x-direction
+  v = StaggeredField(V, imax, jmax)  # velocity in y-direction
+  p = StaggeredField(P, imax, jmax)  # pressure
+
+  f = StaggeredField(F, imax, jmax)  # F
+  g = StaggeredField(G, imax, jmax)  # G
+
+  # right-hand side for pressure iteration
+  rhs = StaggeredField(RHS, imax, jmax)
+
+  # pressure iteration residual
+  p_res = StaggeredField(PRes, imax, jmax)
+#+end_src
+
+Initialize the data arrays
+
+#+begin_src julia
+  set!(u, UI)
+  set!(v, VI)
+  set!(p, PI)
+#+end_src
+
+** Main Loop
+
+#+begin_src julia
+  while t < t_end
+      δt = compute_δt(u, v, δx, δy, Re, τ)
+      set_bv!(u, v, imax, jmax)
+      fill_f!(f, u, v, δx, δy, δt, GX, Re, γ, imax, jmax)
+      fill_g!(g, u, v, δx, δy, δt, GY, Re, γ, imax, jmax)
+      set_bv!(u, v, f, g, imax, jmax)
+      fill_rhs!(rhs, f, g, δx, δy, δt, imax, jmax)
+      it = iter_pressure(p, rhs, p_res,
+                         δx, δy, ω, ϵₚ, iter_max,
+                         imax, jmax, set_bv!)
+      fill_u_next!(u, f, p, δx, δt, imax, jmax)
+      fill_v_next!(v, g, p, δy, δt, imax, jmax)
+      global t = t + δt
   end
 #+end_src
 
+** View Results
+
 #+begin_src julia
-  function interpolate(p::StaggeredField{P},
-                       δx::Float64, δy::Float64,
-                       x::Float64, y::Float64)
-      i = Int(floor((x + δx / 2.0) / δx)) + 1
-      j = Int(floor((y + δy / 2.0) / δy)) + 1
-      x₁ = (i - 1) * δx
-      x₂ = i * δx
-      y₁ = (j - 1) * δy
-      y₂ = j * δy
-      p₁ = p[i - 1, j - 1]
-      p₂ = p[i, j - 1]
-      p₃ = p[i - 1, j]
-      p₄ = p[i, j]
-      return 1 / (δx * δy) *
-             ((x₂ - x) * (y₂ - y)p₁ +
-              (x - x₁) * (y₂ - y)p₂ +
-              (x₂ - x) * (y - y₁)p₃ +
-              (x - x₁) * (y - y₁)p₄)
+  nx_interp = 10
+  ny_interp = 10
+
+  x = range(x_length / nx_interp / 2,
+            x_length - x_length / nx_interp / 2,
+            nx_interp)
+  y = range(y_length / ny_interp / 2,
+            y_length - y_length / ny_interp / 2,
+            ny_interp)
+
+  # meshgrid
+  X = repeat(x, 1, length(y))
+  Y = repeat(y', length(x), 1)
+
+  U_interp = Matrix{Float64}(undef, nx_interp, ny_interp)
+  V_interp = Matrix{Float64}(undef, nx_interp, ny_interp)
+
+  for j in 1:ny_interp
+      for i in 1:nx_interp
+          U_interp[i, j] = interpolate(u, δx, δy, X[i, j], Y[i, j])
+          V_interp[i, j] = interpolate(v, δx, δy, X[i, j], Y[i, j])
+      end
   end
+
+  # magnitude of the interpolated vectors
+  mag = sqrt.(U_interp .^ 2 + V_interp .^ 2)
+
+  # maximum magnitude of the vectors
+  max_mag = maximum(mag)
+
+  # scale by interpolated grid step size and maximum magnitude
+  # one full grid diagonal is equal to the maximum magnitude
+  scale = sqrt(step(x)^2 + step(y)^2) / max_mag
+
+  f = Figure();
+  ax = Axis(f[1, 1]; aspect=DataAspect());
+  arrows2d!(ax,
+            vec(X), vec(Y),
+            vec(scale .* U_interp), vec(scale .* V_interp))
+  heatmap!(ax, 0:δx:x_length, 0:δy:y_length,
+           p.values[2:(end - 1), 2:(end - 1)]);
+
+  save("cavity.png", f)
 #+end_src

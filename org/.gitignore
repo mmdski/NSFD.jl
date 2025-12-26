@@ -1,2 +1,4 @@
 nsfd.jl
+cavity.jl
+cavity_app.jl
 ltximg/*
