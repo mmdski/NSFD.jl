@@ -7,7 +7,7 @@
 #+caption: Lid-driven cavity velocity and pressure fields at steady state.
 [[file:cavity.png]]
 
-Lid-driven cavity solution implemented in Julia, based on the staggered-grid finite-difference formulation of formulation of [[https://epubs.siam.org/doi/book/10.1137/1.9780898719703][Griebel et al. (1998)]].
+Lid-driven cavity solution implemented in Julia, based on the staggered-grid finite-difference formulation of [[https://epubs.siam.org/doi/book/10.1137/1.9780898719703][Griebel et al. (1998)]].
 
 See [[file:cavity.org]] for code.
 
