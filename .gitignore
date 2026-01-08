@@ -7,7 +7,7 @@ Manifest*.toml
 
 .DS_Store
 
-nsfd.jl
+core.jl
 cavity.jl
 cavity_app.jl
 ltximg/*

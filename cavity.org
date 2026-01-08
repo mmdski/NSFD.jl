@@ -18,7 +18,7 @@
 
 * NSDF Core
 :PROPERTIES:
-:header-args:julia: :results none :tangle "nsfd.jl"
+:header-args:julia: :results none :tangle "core.jl"
 :END:
 
 ** Staggered Field Type
@@ -399,7 +399,7 @@ $i = 1,\dots,i_{\max}$, $j = 1,\dots,j_{\max} - 1$
 :END:
 
 #+begin_src julia
-  include("nsfd.jl")
+  include("core.jl")
 #+end_src
 
 ** Velocity
