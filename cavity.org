@@ -276,7 +276,7 @@ G_{i,j} \coloneqq v_{i,j} + \Delta t\left(\frac{1}{Re}\left(\left[\frac{\partial
   function compute_rhs(f::StaggeredField{F}, g::StaggeredField{G},
                        δx::Float64, δy::Float64, δt::Float64,
                        i::Int, j::Int)
-      return 1.0/δt * ((f[i,j] - f[i-1,j])/δx + (g[i,j] - g[i,j-1])/δy)
+      return 1.0/δt * div(f, g, δx, δy, i, j)
   end
 #+end_src
 
