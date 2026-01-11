@@ -1,4 +1,3 @@
-Project.toml
 Manifest*.toml
 
 *.jl~
@@ -6,8 +5,3 @@ Manifest*.toml
 .#*.jl
 
 .DS_Store
-
-core.jl
-cavity.jl
-cavity_app.jl
-ltximg/*
