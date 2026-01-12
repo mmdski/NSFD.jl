@@ -12,6 +12,26 @@ function StaggeredField(::Type{CellPos}, nx::Int, ny::Int) where {CellPos}
     return StaggeredField{CellPos}(values)
 end
 
+function Base.size(field::StaggeredField, d::Int)
+    return size(field.values, d) - 2
+end
+
+function Base.size(field::StaggeredField)
+    return size(field, 1), size(field, 2)
+end
+
+function Base.lastindex(field::StaggeredField, d::Int)
+    return size(field, d)
+end
+
+function Base.axes(field::StaggeredField, d::Int)
+    return Base.OneTo(size(field, d))
+end
+
+function Base.axes(field::StaggeredField)
+    return Base.OneTo(size(field, 1)), Base.OneTo(size(field, 2))
+end
+
 function Base.getindex(field::StaggeredField, i::Int, j::Int)
     return field.values[i + 1, j + 1]
 end
@@ -19,11 +39,6 @@ end
 function Base.setindex!(field::StaggeredField{P}, v::StaggeredValue{P}, i::Int,
                         j::Int) where {P}
     return (field.values[i + 1, j + 1] = v)
-end
-
-function Base.setindex!(field::StaggeredField{P}, v::Float64, i::Int,
-                        j::Int) where {P}
-    return (field.values[i + 1, j + 1] = StaggeredValue{P}(v))
 end
 
 function Base.show(io::IO, field::StaggeredField)
@@ -35,7 +50,19 @@ function set!(field::StaggeredField{P}, x::StaggeredValue{P}) where {P}
     return field
 end
 
-function set!(field::StaggeredField{P}, x::Float64) where {P}
+function set!(field::StaggeredField{P}, x::Number) where {P}
     fill!(field.values, StaggeredValue{P}(x))
     return field
+end
+
+function maxabs(field::StaggeredField)
+    A = field.values
+    m = 0.0
+    for j in 2:(size(A, 2) - 1)
+        for i in 2:(size(A, 1) - 1)
+            x = abs(A[i, j].value)
+            m = ifelse(x > m, x, m)
+        end
+    end
+    return m
 end

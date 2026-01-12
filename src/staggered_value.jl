@@ -8,7 +8,7 @@ struct StaggeredValue{CellPos}
 end
 
 function Base.show(io::IO, v::StaggeredValue{P}) where {P}
-    return print(io, "{", P, "}(", v.value, ")")
+    return print(io, P, "(", v.value, ")")
 end
 
 function Base.:-(v::StaggeredValue{P}) where {P}
@@ -45,4 +45,16 @@ end
 
 function Base.:/(v::StaggeredValue{P}, c::Float64) where {P}
     return StaggeredValue{P}(v.value / c)
+end
+
+function Base.:+(a::StaggeredValue{P}, b::StaggeredValue{P}) where {P}
+    return StaggeredValue{P}(a.value + b.value)
+end
+
+function Base.:-(a::StaggeredValue{P}, b::StaggeredValue{P}) where {P}
+    return StaggeredValue{P}(a.value - b.value)
+end
+
+function Base.:*(a::StaggeredValue{P}, b::StaggeredValue{P}) where {P}
+    return StaggeredValue{P}(a.value * b.value)
 end
