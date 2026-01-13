@@ -58,3 +58,7 @@ end
 function Base.:*(a::StaggeredValue{P}, b::StaggeredValue{P}) where {P}
     return StaggeredValue{P}(a.value * b.value)
 end
+
+function Base.isnan(v::StaggeredValue)
+    return isnan(v.value)
+end

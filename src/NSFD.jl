@@ -17,7 +17,7 @@ struct EN <: CellPos end  # east, north. used for interpolated u, v values
 export StaggeredValue
 include("staggered_value.jl")
 
-export StaggeredField, set!
+export StaggeredField, set!, maxabs
 include("staggered_field.jl")
 
 export interp
@@ -32,7 +32,7 @@ export NoSlip
 export apply!
 include("domain_bc.jl")
 
-export compute_δt, compute_f, compute_g, compute_rhs, p_it, p_res,
+export compute_δt, compute_f, compute_g, compute_rhs, compute_p_it, compute_p_res,
        compute_u_next, compute_v_next
 
 function compute_δt(u::StaggeredField{EC}, v::StaggeredField{CN},
@@ -67,18 +67,18 @@ function compute_rhs(f::StaggeredField{EC}, g::StaggeredField{CN},
     return 1.0 / δt * div(f, g, δx, δy, i, j)
 end
 
-function p_it(p::StaggeredField{CC}, rhs::StaggeredField{CC},
-              δx::Float64, δy::Float64, ω::Float64,
-              i::Int, j::Int)
+function compute_p_it(p::StaggeredField{CC}, rhs::StaggeredField{CC},
+                      δx::Float64, δy::Float64, ω::Float64,
+                      i::Int, j::Int)
     return (1.0 - ω) * p[i, j] +
            ω / (2.0 / δx^2 + 2.0 / δy^2) *
            ((p[i + 1, j] + p[i - 1, j]) / δx^2 +
             (p[i, j + 1] + p[i, j - 1]) / δy^2 - rhs[i, j])
 end
 
-function p_res(p_it::StaggeredField{CC}, rhs::StaggeredField{CC},
-               δx::Float64, δy::Float64,
-               i::Int, j::Int)
+function compute_p_res(p_it::StaggeredField{CC}, rhs::StaggeredField{CC},
+                       δx::Float64, δy::Float64,
+                       i::Int, j::Int)
     return lap(p_it, δx, δy, i, j) - rhs[i, j]
 end
 

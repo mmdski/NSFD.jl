@@ -24,27 +24,35 @@ function div(f::StaggeredField{EC}, g::StaggeredField{CN}, δx::Float64, δy::Fl
     return ∂x(f, δx, i, j) + ∂y(g, δy, i, j)
 end
 
+# ∂(u²)/∂x
+# advection of u (x-momentum) in the x-direction
 function ∂x_cd(f::StaggeredField{EC}, u::StaggeredField{EC}, δx::Float64, i::Int, j::Int)
     return StaggeredValue{EC}((1.0 / δx *
-                               (interp(u, CC, i, j) * interp(f, CC, i, j) -
+                               (interp(u, CC, i + 1, j) * interp(f, CC, i + 1, j) -
                                 interp(u, CC, i, j) * interp(f, CC, i, j))).value)
 end
 
+# ∂(uv)/∂x
+# advection of v (y-momentum) in the x-direction
 function ∂x_cd(u::StaggeredField{EC}, f::StaggeredField{CN}, δx::Float64, i::Int, j::Int)
     return StaggeredValue{CN}((1.0 / δx *
                                (interp(u, EN, i, j) * interp(f, EN, i, j) -
-                                interp(u, EN, i, j) * interp(f, EN, i, j))).value)
+                                interp(u, EN, i - 1, j) * interp(f, EN, i - 1, j))).value)
 end
 
+# ∂(uv)/∂y
+# advection of u (x-momentum) in the y-direction
 function ∂y_cd(f::StaggeredField{EC}, v::StaggeredField{CN}, δy::Float64, i::Int, j::Int)
     return StaggeredValue{EC}((1.0 / δy *
                                (interp(v, EN, i, j) * interp(f, EN, i, j) -
-                                interp(v, EN, i, j) * interp(f, EN, i, j))).value)
+                                interp(v, EN, i, j - 1) * interp(f, EN, i, j - 1))).value)
 end
 
+# ∂(v²)/∂y
+# advection of v (y-momentum) in the y-direction
 function ∂y_cd(f::StaggeredField{CN}, v::StaggeredField{CN}, δy::Float64, i::Int, j::Int)
     return StaggeredValue{CN}((1.0 / δy *
-                               (interp(v, CC, i, j) * interp(f, CC, i, j) -
+                               (interp(v, CC, i, j + 1) * interp(f, CC, i, j + 1) -
                                 interp(v, CC, i, j) * interp(f, CC, i, j))).value)
 end
 
@@ -57,9 +65,11 @@ end
 function advect_v_cd(u::StaggeredField{EC}, v::StaggeredField{CN},
                      δx::Float64, δy::Float64,
                      i::Int, j::Int)
-    return ∂x_cd(u, v, δx, i, j) + ∂y_cd(u, v, δy, i, j)
+    return ∂x_cd(u, v, δx, i, j) + ∂y_cd(v, v, δy, i, j)
 end
 
+# ∂(u²)/∂x
+# advection of u (x-momentum) in the x-direction
 function ∂x_dc(u::StaggeredField{EC}, f::StaggeredField{EC}, δx::Float64,
                i::Int, j::Int)
     kᵣ = interp(u, CC, i + 1, j).value
@@ -68,6 +78,8 @@ function ∂x_dc(u::StaggeredField{EC}, f::StaggeredField{EC}, δx::Float64,
             (-kₗ - abs(kₗ)) * f[i - 1, j]) / (2 * δx)
 end
 
+# ∂(uv)/∂y
+# advection of u (x-momentum) in the y-direction
 function ∂y_dc(f::StaggeredField{EC}, v::StaggeredField{CN}, δy::Float64,
                i::Int, j::Int)
     kᵣ = interp(v, EN, i, j).value
@@ -76,6 +88,8 @@ function ∂y_dc(f::StaggeredField{EC}, v::StaggeredField{CN}, δy::Float64,
             (-kₗ - abs(kₗ)) * f[i, j - 1]) / (2 * δy)
 end
 
+# ∂(uv)/∂x
+# advection of v (y-momentum) in the x-direction
 function ∂x_dc(u::StaggeredField{EC}, f::StaggeredField{CN}, δx::Float64,
                i::Int, j::Int)
     kᵣ = interp(u, EN, i, j).value
@@ -84,9 +98,11 @@ function ∂x_dc(u::StaggeredField{EC}, f::StaggeredField{CN}, δx::Float64,
             (-kₗ - abs(kₗ)) * f[i - 1, j]) / (2 * δx)
 end
 
+# ∂(v²)/∂y
+# advection of v (y-momentum) in the y-direction
 function ∂y_dc(f::StaggeredField{CN}, v::StaggeredField{CN}, δy::Float64,
                i::Int, j::Int)
-    kᵣ = interp(v, CC, i, j).value
+    kᵣ = interp(v, CC, i, j + 1).value
     kₗ = interp(v, CC, i, j).value
     return ((kᵣ - abs(kᵣ)) * f[i, j + 1] + (kᵣ + abs(kᵣ) - kₗ + abs(kₗ))f[i, j] +
             (-kₗ - abs(kₗ)) * f[i, j - 1]) / (2 * δy)
@@ -101,29 +117,29 @@ end
 function advect_v_dc(u::StaggeredField{EC}, v::StaggeredField{CN},
                      δx::Float64, δy::Float64,
                      i::Int, j::Int)
-    return ∂x_dc(u, v, δx, i, j) + ∂y_dc(u, v, δy, i, j)
+    return ∂x_dc(u, v, δx, i, j) + ∂y_dc(v, v, δy, i, j)
 end
 
 function advect_u(u::StaggeredField{EC}, v::StaggeredField{CN},
                   δx::Float64, δy::Float64, γ::Float64,
                   i::Int, j::Int)
-    return γ * advect_u_cd(u, v, δx, δy, i, j) +
-           (1 - γ) * advect_u_dc(u, v, δx, δy, i, j)
+    return γ * advect_u_dc(u, v, δx, δy, i, j) +
+           (1 - γ) * advect_u_cd(u, v, δx, δy, i, j)
 end
 
 function advect_v(u::StaggeredField{EC}, v::StaggeredField{CN},
                   δx::Float64, δy::Float64, γ::Float64,
                   i::Int, j::Int)
-    return γ * advect_v_cd(u, v, δx, δy, i, j) +
-           (1 - γ) * advect_v_dc(u, v, δx, δy, i, j)
+    return γ * advect_v_dc(u, v, δx, δy, i, j) +
+           (1 - γ) * advect_v_cd(u, v, δx, δy, i, j)
 end
 
 function ∂x²(f::StaggeredField, δx::Float64, i::Int, j::Int)
-    return (f[i + 1, j] - 2 * f[i, j] + f[i - 1, j]) / (δx * δx)
+    return (f[i + 1, j] - 2.0 * f[i, j] + f[i - 1, j]) / (δx * δx)
 end
 
 function ∂y²(f::StaggeredField, δy::Float64, i::Int, j::Int)
-    return (f[i, j + 1] - 2 * f[i, j] + f[i, j - 1]) / (δy * δy)
+    return (f[i, j + 1] - 2.0 * f[i, j] + f[i, j - 1]) / (δy * δy)
 end
 
 function lap(f::StaggeredField, δx::Float64, δy::Float64, i::Int, j::Int)

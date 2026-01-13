@@ -36,9 +36,14 @@ function Base.getindex(field::StaggeredField, i::Int, j::Int)
     return field.values[i + 1, j + 1]
 end
 
-function Base.setindex!(field::StaggeredField{P}, v::StaggeredValue{P}, i::Int,
-                        j::Int) where {P}
+function Base.setindex!(field::StaggeredField{P}, v::StaggeredValue{P},
+                        i::Int, j::Int) where {P}
     return (field.values[i + 1, j + 1] = v)
+end
+
+function Base.setindex!(field::StaggeredField{P}, v::Float64,
+                        i::Int, j::Int) where {P}
+    return (field.values[i + 1, j + 1] = StaggeredValue{P}(v))
 end
 
 function Base.show(io::IO, field::StaggeredField)
@@ -53,6 +58,14 @@ end
 function set!(field::StaggeredField{P}, x::Number) where {P}
     fill!(field.values, StaggeredValue{P}(x))
     return field
+end
+
+function Base.iterate(field::StaggeredField)
+    return iterate(field.values)
+end
+
+function Base.iterate(field::StaggeredField, state)
+    return iterate(field.values, state)
 end
 
 function maxabs(field::StaggeredField)

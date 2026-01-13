@@ -1,0 +1,277 @@
+#+title: NSFD - Lid-Driven Cavity
+#+author: Marian Domanski
+#+date: <2026-01-11 Sun 16:20>
+#+startup: overview
+#+startup: latexpreview
+#+startup: inlineimages
+#+property: header-args:julia :session cavity
+
+#+begin_src julia :results none
+  using Pkg
+  Pkg.activate(".")
+
+  using NSFD
+#+end_src
+
+* Helper Functions
+** Velocity
+#+begin_src julia :results none
+  function fill_u_next!(u_next::StaggeredField{EC},
+                        f::StaggeredField{EC}, p::StaggeredField{CC},
+                        δx::Float64, δt::Float64)
+      imax, jmax = size(u_next)
+      for j in 1:jmax
+          for i in 1:(imax-1)
+              u_next[i,j] = compute_u_next(f, p, δx, δt, i, j)
+          end
+      end
+  end
+#+end_src
+
+#+begin_src julia :results none
+  function fill_v_next!(v_next::StaggeredField{CN},
+                        g::StaggeredField{CN}, p::StaggeredField{CC},
+                        δy::Float64, δt::Float64)
+      imax, jmax = size(v_next)
+      for j in 1:(jmax-1)
+          for i in 1:imax
+              v_next[i,j] = compute_v_next(g, p, δy, δt, i, j)
+          end
+      end
+  end
+#+end_src
+
+** Pressure
+
+#+begin_src julia :results none
+  function fill_rhs!(rhs::StaggeredField{CC},
+                     f::StaggeredField{EC}, g::StaggeredField{CN},
+                     δx::Float64, δy::Float64, δt::Float64)
+      for j in axes(rhs, 2)
+          for i in axes(rhs,1)
+              rhs[i,j] = compute_rhs(f, g, δx, δy, δt, i, j)
+          end
+      end
+  end
+#+end_src
+
+#+begin_src julia :results none
+  function iter_pressure(p::StaggeredField{CC}, rhs::StaggeredField{CC},
+                         p_res::StaggeredField{CC},
+                         δx::Float64, δy::Float64,
+                         ω::Float64, ϵₚ::Float64,
+                         iter_max::Int)
+
+      it = 0
+
+      p_norm = maxabs(p)
+
+      while it < iter_max
+
+          for j in axes(p, 2)
+              for i in axes(p, 1)
+                  p[i, j] = p_it(p, rhs, δx, δy, ω, i, j)
+              end
+          end
+
+          for j in axes(p, 2)
+              for i in axes(p, 1)
+                  p_res[i, j] = compute_p_res(p, rhs, δx, δy, i, j)
+              end
+          end
+
+          if maxabs(p_res) < ϵₚ * p_norm
+              break
+          end
+
+          it = it + 1
+
+          apply!(p)
+      end
+
+      return it
+  end
+#+end_src
+
+** Intermediate Velocities
+
+#+begin_src julia :results none
+  function fill_f!(f::StaggeredField{EC},
+                   u::StaggeredField{EC}, v::StaggeredField{CN},
+                   δx::Float64, δy::Float64, δt::Float64,
+                   GX::Float64, Re::Float64, γ::Float64)
+      imax, jmax = size(f)
+      for j in 1:imax
+          for i in 1:(imax - 1)
+              f[i, j] = compute_f(u, v, δx, δy, δt, GX, Re, γ, i, j)
+          end
+      end
+  end
+#+end_src
+
+#+begin_src julia :results none
+  function fill_g!(g::StaggeredField{CN},
+                   u::StaggeredField{EC}, v::StaggeredField{CN},
+                   δx::Float64, δy::Float64, δt::Float64,
+                   GY::Float64, Re::Float64, γ::Float64)
+      imax, jmax = size(f)
+      for j in 1:(jmax - 1)
+          for i in 1:imax
+              g[i,j] = compute_g(u, v, δx, δy, δt, GY, Re, γ, i, j)
+          end
+      end
+  end
+#+end_src
+
+* Problem Set-Up
+** Geometry Data
+
+#+begin_src julia :results none
+  x_length = 1.0        # domain size in x-direction
+  y_length = 1.0        # domain size in y-direction
+  imax = 128            # number of interior cells in x-direction
+  jmax = 128            # number of interior cells in y-direction
+  δx = x_length / imax  # length of one cell in x-direction
+  δy = y_length / jmax  # length of one cell in y-direction
+#+end_src
+
+** Time-Stepping Data
+
+#+begin_src julia :results none
+  t = 0.0       # set initial time to zero
+  t_end = 20.0  # final time
+  τ = 0.5       # safety factor for time step size control
+#+end_src
+
+** Pressure-Iteration Data
+
+#+begin_src julia :results none
+  iter_max = 100  # maximal number of pressure iterations in one time step
+  ϵₚ = 0.001      # stopping tolerance for pressure iteration
+  ω = 1.7         # relaxation parameter for SOR iteration
+  γ = 0.9         # upwind differencing factor
+#+end_src
+
+** Problem-Dependent Quantities
+
+#+begin_src julia :results none
+  Re = 1000.0  # Reynolds number
+  GX = 0.0     # body force in x-direction
+  GY = 0.0     # body force in y-direction
+  UI = 0.0     # initial velocity in x-direction
+  VI = 0.0     # initial velocity in y-direction
+  PI = 0.0     # initial pressure
+#+end_src
+
+** Data Arrays
+
+#+begin_src julia :results none
+  u = StaggeredField(EC, imax, jmax)  # velocity in x-direction
+  v = StaggeredField(CN, imax, jmax)  # velocity in y-direction
+  p = StaggeredField(CC, imax, jmax)  # pressure
+
+  f = StaggeredField(EC, imax, jmax)  # F
+  g = StaggeredField(CN, imax, jmax)  # G
+
+  # right-hand side for pressure iteration
+  rhs = StaggeredField(CC, imax, jmax)
+
+  # pressure iteration residual
+  p_res = StaggeredField(CC, imax, jmax)
+#+end_src
+
+#+begin_src julia :results none
+  set!(u, UI)
+  set!(v, VI)
+  set!(p, PI)
+#+end_src
+
+** Boundary Conditions
+
+#+begin_src julia :results none
+  ebc = NoSlip(Domain, East)
+  wbc = NoSlip(Domain, West)
+  nbc = NoSlip(Domain, North, 1.0)
+  sbc = NoSlip(Domain, South)
+#+end_src
+
+* Main Loop
+
+#+begin_src julia :results none
+  while t < t_end
+      δt = compute_δt(u, v, δx, δy, Re, τ)
+      apply!(nbc, sbc, ebc, wbc, u, v)
+      fill_f!(f, u, v, δx, δy, δt, GX, Re, γ)
+      fill_g!(g, u, v, δx, δy, δt, GY, Re, γ)
+      apply!(f, g, u, v)
+      fill_rhs!(rhs, f, g, δx, δy, δt)
+      it = iter_pressure(p, rhs, p_res,
+                         δx, δy, ω, ϵₚ, iter_max)
+
+      if any(isnan, p)
+          println("Nan in p at $t")
+          break
+      end
+
+      fill_u_next!(u, f, p, δx, δt)
+      fill_v_next!(v, g, p, δy, δt)
+
+      if any(isnan, u) | any(isnan, v)
+          println("NaN in u or v")
+          break
+      end
+
+      global t = t + δt
+  end
+#+end_src
+
+* View Results
+
+#+begin_src julia :results none
+  using GLMakie
+
+  nx_interp = 10
+  ny_interp = 10
+
+  x = range(x_length / nx_interp / 2,
+            x_length - x_length / nx_interp / 2,
+            nx_interp)
+  y = range(y_length / ny_interp / 2,
+            y_length - y_length / ny_interp / 2,
+            ny_interp)
+
+  # meshgrid
+  X = repeat(x, 1, length(y))
+  Y = repeat(y', length(x), 1)
+
+  U_interp = Matrix{Float64}(undef, nx_interp, ny_interp)
+  V_interp = Matrix{Float64}(undef, nx_interp, ny_interp)
+
+  for j in 1:ny_interp
+      for i in 1:nx_interp
+          U_interp[i, j] = interpolate(u, δx, δy, X[i, j], Y[i, j])
+          V_interp[i, j] = interpolate(v, δx, δy, X[i, j], Y[i, j])
+      end
+  end
+
+  # magnitude of the interpolated vectors
+  mag = sqrt.(U_interp .^ 2 + V_interp .^ 2)
+
+  # maximum magnitude of the vectors
+  max_mag = maximum(mag)
+
+  # scale by interpolated grid step size and maximum magnitude
+  # one full grid diagonal is equal to the maximum magnitude
+  scale = sqrt(step(x)^2 + step(y)^2) / max_mag
+
+  f = Figure();
+  ax = Axis(f[1, 1]; aspect=DataAspect());
+  heatmap!(ax, 0:δx:x_length, 0:δy:y_length,
+           p.values[2:(end - 1), 2:(end - 1)]);
+  arrows2d!(ax,
+            vec(X), vec(Y),
+            vec(scale .* U_interp), vec(scale .* V_interp))
+
+  save("cavity.png", f)
+
+#+end_src
