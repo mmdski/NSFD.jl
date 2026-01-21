@@ -15,6 +15,7 @@ function Base.:-(v::StaggeredValue{P}) where {P}
     return StaggeredValue{P}(-v.value)
 end
 
+# float arithmetic
 function Base.:+(c::Float64, v::StaggeredValue{P}) where {P}
     return StaggeredValue{P}(c + v.value)
 end
@@ -47,6 +48,7 @@ function Base.:/(v::StaggeredValue{P}, c::Float64) where {P}
     return StaggeredValue{P}(v.value / c)
 end
 
+# same-cell position arithmetic
 function Base.:+(a::StaggeredValue{P}, b::StaggeredValue{P}) where {P}
     return StaggeredValue{P}(a.value + b.value)
 end
@@ -57,6 +59,19 @@ end
 
 function Base.:*(a::StaggeredValue{P}, b::StaggeredValue{P}) where {P}
     return StaggeredValue{P}(a.value * b.value)
+end
+
+function Base.:*(a::StaggeredValue{CC}, b::StaggeredValue{P}) where {P}
+    return StaggeredValue{P}(a.value * b.value)
+end
+
+function Base.:*(a::StaggeredValue{EN}, b::StaggeredValue{P}) where {P}
+    return StaggeredValue{P}(a.value * b.value)
+end
+
+# basic functions
+function Base.abs(v::StaggeredValue{P}) where {P}
+    return StaggeredValue{P}(abs(v.value))
 end
 
 function Base.isnan(v::StaggeredValue)

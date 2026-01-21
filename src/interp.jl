@@ -58,3 +58,8 @@ function interp(v::StaggeredField{CN},
             (x₂ - x) * (y - y₁) * v₃ +
             (x - x₁) * (y - y₁) * v₄)
 end
+
+function interp(uvp::FlowFields, geom::Geometry, x::Float64, y::Float64)
+    return interp(uvp.u, geom.δx, geom.δy, x, y),
+           interp(uvp.v, geom.δx, geom.δy, x, y)
+end
