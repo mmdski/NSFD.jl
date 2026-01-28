@@ -9,7 +9,7 @@
 
 Lid-driven cavity solution implemented in Julia, based on the staggered-grid finite-difference formulation of [[https://epubs.siam.org/doi/book/10.1137/1.9780898719703][Griebel et al. (1998)]].
 
-See [[file:cavity.org]] for code.
+See [[file:org/cavity.org]] for code.
 
 U. Griebel, T. Dornseifer, and T. Neunhoeffer,
 *Numerical Simulation in Fluid Dynamics: A Practical Introduction*,
